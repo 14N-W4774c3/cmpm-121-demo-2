@@ -13,14 +13,13 @@ const stickerCanvas = document.createElement("canvas");
 stickerCanvas.width = 256;
 stickerCanvas.height = 256;
 document.body.appendChild(stickerCanvas);
-const ctx = stickerCanvas.getContext("2d");
+const pen = stickerCanvas.getContext("2d");
 const cursor = {x: 0, y: 0};
 
-if (ctx){
+if (pen){
     let drawing: boolean = false;
     stickerCanvas.addEventListener("mousedown", (e) => {
         drawing = true;
-        console.log("mousedown", e);
         cursor.x = e.offsetX;
         cursor.y = e.offsetY;
         
@@ -28,11 +27,10 @@ if (ctx){
 
     stickerCanvas.addEventListener("mousemove", (e) => {
         if (drawing) {
-            console.log("mousemove", e);
-            ctx.beginPath();
-            ctx.moveTo(cursor.x, cursor.y);
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
+            pen.beginPath();
+            pen.moveTo(cursor.x, cursor.y);
+            pen.lineTo(e.offsetX, e.offsetY);
+            pen.stroke();
             cursor.x = e.offsetX;
             cursor.y = e.offsetY;
             }
@@ -40,7 +38,6 @@ if (ctx){
 
     stickerCanvas.addEventListener("mouseup", (e) => {
         drawing = false;
-        console.log("mouseup", e);
     });
 }
 else {
@@ -51,8 +48,8 @@ const clearButton = document.createElement("button");
 clearButton.textContent = "Clear";
 document.body.appendChild(clearButton);
 clearButton.addEventListener("click", () => {
-    if (ctx) {
-        ctx.clearRect(0, 0, stickerCanvas.width, stickerCanvas.height);
+    if (pen) {
+        pen.clearRect(0, 0, stickerCanvas.width, stickerCanvas.height);
     }
     else {
         console.error("Could not get 2D context from canvas");
