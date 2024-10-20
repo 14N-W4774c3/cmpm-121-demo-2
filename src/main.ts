@@ -13,3 +13,7 @@ const stickerCanvas = document.createElement("canvas");
 stickerCanvas.width = 256;
 stickerCanvas.height = 256;
 document.body.appendChild(stickerCanvas);
+
+stickerCanvas.addEventListener("mousedown", (e) => {
+    console.log("mousedown", e);
+    });
