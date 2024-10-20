@@ -14,15 +14,20 @@ stickerCanvas.width = 256;
 stickerCanvas.height = 256;
 document.body.appendChild(stickerCanvas);
 
+let drawing: boolean = false;
 stickerCanvas.addEventListener("mousedown", (e) => {
+    drawing = true;
     console.log("mousedown", e);
     });
 
 stickerCanvas.addEventListener("mousemove", (e) => {
-    console.log("mousemove", e);
+    if (drawing) {
+        console.log("mousemove", e);
+        }
     });
 
 stickerCanvas.addEventListener("mouseup", (e) => {
+    drawing = false;
     console.log("mouseup", e);
     });
 
