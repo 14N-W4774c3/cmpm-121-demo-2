@@ -17,3 +17,12 @@ document.body.appendChild(stickerCanvas);
 stickerCanvas.addEventListener("mousedown", (e) => {
     console.log("mousedown", e);
     });
+
+stickerCanvas.addEventListener("mousemove", (e) => {
+    console.log("mousemove", e);
+    });
+
+stickerCanvas.addEventListener("mouseup", (e) => {
+    console.log("mouseup", e);
+    });
+
