@@ -46,3 +46,15 @@ if (ctx){
 else {
     console.error("Could not get 2D context from canvas");
 }
+
+const clearButton = document.createElement("button");
+clearButton.textContent = "Clear";
+document.body.appendChild(clearButton);
+clearButton.addEventListener("click", () => {
+    if (ctx) {
+        ctx.clearRect(0, 0, stickerCanvas.width, stickerCanvas.height);
+    }
+    else {
+        console.error("Could not get 2D context from canvas");
+    }
+});
