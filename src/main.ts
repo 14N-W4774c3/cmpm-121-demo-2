@@ -22,35 +22,23 @@ if (pen){
     
     stickerCanvas.addEventListener("mousedown", (e) => {
         drawing = true;
-        /*
-        cursor.x = e.offsetX;
-        cursor.y = e.offsetY;
-        */
         xCoords.push(e.offsetX);
         yCoords.push(e.offsetY);
     });
 
     stickerCanvas.addEventListener("mousemove", (e) => {
         if (drawing) {
-            /*
-            pen.beginPath();
-            pen.moveTo(cursor.x, cursor.y);
-            pen.lineTo(e.offsetX, e.offsetY);
-            pen.stroke();
-            cursor.x = e.offsetX;
-            cursor.y = e.offsetY;
-            */
             xCoords.push(e.offsetX);
             yCoords.push(e.offsetY);
             stickerCanvas.dispatchEvent(new Event("drawing-changed"));
             }
     });
 
-    stickerCanvas.addEventListener("mouseup", (e) => {
+    stickerCanvas.addEventListener("mouseup", () => {
         drawing = false;
     });
     
-    stickerCanvas.addEventListener("drawing-changed", (e) => {
+    stickerCanvas.addEventListener("drawing-changed", () => {
         pen.clearRect(0, 0, stickerCanvas.width, stickerCanvas.height);
         pen.beginPath();
         pen.moveTo(xCoords[0], yCoords[0]);
