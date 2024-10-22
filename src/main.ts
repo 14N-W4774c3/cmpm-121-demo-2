@@ -16,6 +16,8 @@ document.body.appendChild(stickerCanvas);
 const pen = stickerCanvas.getContext("2d");
 const xCoords: number[] = [];
 const yCoords: number[] = [];
+const redoXCoords: number[] = [];
+const redoYCoords: number[] = [];
 
 if (pen){
     let drawing: boolean = false;
@@ -69,8 +71,22 @@ undoButton.textContent = "Undo";
 document.body.appendChild(undoButton);
 undoButton.addEventListener("click", () => {
     if (pen) {
-        xCoords.pop();
-        yCoords.pop();
+        redoXCoords.push(xCoords.pop()!);
+        redoYCoords.push(yCoords.pop()!);
+        stickerCanvas.dispatchEvent(new Event("drawing-changed"));
+    }
+    else {
+        console.error("Could not get 2D context from canvas");
+    }
+});
+
+const redoButton = document.createElement("button");
+redoButton.textContent = "Redo";
+document.body.appendChild(redoButton);
+redoButton.addEventListener("click", () => {
+    if (pen) {
+        xCoords.push(redoXCoords.pop()!);
+        yCoords.push(redoYCoords.pop()!);
         stickerCanvas.dispatchEvent(new Event("drawing-changed"));
     }
     else {
