@@ -70,7 +70,7 @@ const undoButton = document.createElement("button");
 undoButton.textContent = "Undo";
 document.body.appendChild(undoButton);
 undoButton.addEventListener("click", () => {
-    if (pen) {
+    if (pen && xCoords.length > 0 && yCoords.length > 0) {
         redoXCoords.push(xCoords.pop()!);
         redoYCoords.push(yCoords.pop()!);
         stickerCanvas.dispatchEvent(new Event("drawing-changed"));
@@ -84,7 +84,7 @@ const redoButton = document.createElement("button");
 redoButton.textContent = "Redo";
 document.body.appendChild(redoButton);
 redoButton.addEventListener("click", () => {
-    if (pen) {
+    if (pen && redoXCoords.length > 0 && redoYCoords.length > 0) {
         xCoords.push(redoXCoords.pop()!);
         yCoords.push(redoYCoords.pop()!);
         stickerCanvas.dispatchEvent(new Event("drawing-changed"));
