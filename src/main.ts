@@ -40,9 +40,28 @@ function createLine(xCoord: number, yCoord: number, width: number = 3): line{
             ctx.stroke();
         }
     };
-}
+};
 const displayedLines: line[] = [];
 const redoStack: line[] = [];
+
+type preview = {
+    x: number,
+    y: number,
+    width: number,
+    draw: (ctx: CanvasRenderingContext2D) => void
+};
+function createPreview(x: number, y: number, width: number): preview{
+    return {
+        x: x,
+        y: y,
+        width: width,
+        draw(ctx: CanvasRenderingContext2D){
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.width, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+    };
+};
 
 function errorMessage(){
     console.error("Could not get 2D context from canvas");
@@ -60,7 +79,8 @@ if (pen){
             displayedLines[displayedLines.length - 1].xCoords.push(nextPoint.offsetX);
             displayedLines[displayedLines.length - 1].yCoords.push(nextPoint.offsetY);           
             stickerCanvas.dispatchEvent(new Event("drawing-changed"));
-            }
+        }
+        //else, display preview?
     });
 
     stickerCanvas.addEventListener("mouseup", () => {
