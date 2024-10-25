@@ -79,8 +79,9 @@ if (pen){
             displayedLines[displayedLines.length - 1].xCoords.push(nextPoint.offsetX);
             displayedLines[displayedLines.length - 1].yCoords.push(nextPoint.offsetY);           
             stickerCanvas.dispatchEvent(new Event("drawing-changed"));
+        } else {
+            stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: nextPoint.offsetX, y: nextPoint.offsetY}}));
         }
-        //else, display preview?
     });
 
     stickerCanvas.addEventListener("mouseup", () => {
@@ -90,6 +91,11 @@ if (pen){
     stickerCanvas.addEventListener("drawing-changed", () => {
         pen.clearRect(0, 0, stickerCanvas.width, stickerCanvas.height);
         displayedLines.forEach(line => line.display(pen));
+    });
+
+    stickerCanvas.addEventListener("tool-moved", (cursorEvent) => {
+        const cursor = cursorEvent as CustomEvent<{x: number, y: number}>;
+        createPreview(cursor.detail.x, cursor.detail.y, lineWidth).draw(pen)
     });
 }
 else {errorMessage();}
