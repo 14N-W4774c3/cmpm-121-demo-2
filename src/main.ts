@@ -13,22 +13,29 @@ const stickerCanvas = document.createElement("canvas");
 stickerCanvas.width = 256;
 stickerCanvas.height = 256;
 document.body.appendChild(stickerCanvas);
+
 const pen = stickerCanvas.getContext("2d");
+let lineWidth = 3;
 
 type line = {
     xCoords: number[], 
     yCoords: number[], 
+    lineWidth: number,
     display: (ctx: CanvasRenderingContext2D) => void
 };
-function createLine(xCoord: number, yCoord: number): line{
+function createLine(xCoord: number, yCoord: number, width: number = 3): line{
     return {
         xCoords: [xCoord],
         yCoords: [yCoord],
+        lineWidth: width,
         display(ctx: CanvasRenderingContext2D){
             ctx.beginPath();
             ctx.moveTo(this.xCoords[0], this.yCoords[0]);
             for (let i = 1; i < this.xCoords.length; i++) {
                 ctx.lineTo(this.xCoords[i], this.yCoords[i]);
+            }
+            if (this.lineWidth){
+                ctx.lineWidth = this.lineWidth;
             }
             ctx.stroke();
         }
@@ -45,7 +52,7 @@ if (pen){
     let drawing: boolean = false;
     stickerCanvas.addEventListener("mousedown", (lineStart) => {
         drawing = true;
-        displayedLines.push(createLine(lineStart.offsetX, lineStart.offsetY));
+        displayedLines.push(createLine(lineStart.offsetX, lineStart.offsetY, lineWidth));
     });
 
     stickerCanvas.addEventListener("mousemove", (nextPoint) => {
@@ -98,3 +105,13 @@ redoButton.addEventListener("click", () => {
     }
     else {errorMessage();}
 });
+
+const thinPenButton = document.createElement("button");
+thinPenButton.textContent = "Thin Pen";
+document.body.appendChild(thinPenButton);
+thinPenButton.addEventListener("click", () => {lineWidth = 3;});
+
+const thickPenButton = document.createElement("button");
+thickPenButton.textContent = "Thick Pen";
+document.body.appendChild(thickPenButton);
+thickPenButton.addEventListener("click", () => {lineWidth = 6;});
