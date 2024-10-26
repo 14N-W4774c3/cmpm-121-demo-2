@@ -21,37 +21,66 @@ type line = {
     xCoords: number[], 
     yCoords: number[], 
     lineWidth: number,
-    type: string,
-    display: (ctx: CanvasRenderingContext2D) => void
+    draw: (ctx: CanvasRenderingContext2D) => void,
+    drag: (x: number, y: number) => void
 };
-function createLine(xCoord: number, yCoord: number, width: number = 3, type: string = "pen"): line{
+function createLine(xCoord: number, yCoord: number, width: number = 3): line{
     return {
         xCoords: [xCoord],
         yCoords: [yCoord],
         lineWidth: width,
-        type: type,
-        display(ctx: CanvasRenderingContext2D){
-            if (this.type === "pen"){
-                ctx.beginPath();
-                ctx.moveTo(this.xCoords[0], this.yCoords[0]);
-                for (let i = 1; i < this.xCoords.length; i++) {
-                    ctx.lineTo(this.xCoords[i], this.yCoords[i]);
-                }
-                if (this.lineWidth){
-                    ctx.lineWidth = this.lineWidth;
-                }
-                ctx.stroke();
-            } else {
-                ctx.font = "40px serif";
-                ctx.textBaseline = "middle";
-                ctx.fillText(this.type, this.xCoords[0], this.yCoords[0]);
+        draw(ctx: CanvasRenderingContext2D){
+            ctx.beginPath();
+            ctx.moveTo(this.xCoords[0], this.yCoords[0]);
+            for (let i = 1; i < this.xCoords.length; i++) {
+                ctx.lineTo(this.xCoords[i], this.yCoords[i]);
             }
-            
+            if (this.lineWidth){
+                ctx.lineWidth = this.lineWidth;
+            }
+            ctx.stroke();
+        },
+        drag(x: number, y: number){
+            this.xCoords.push(x);
+            this.yCoords.push(y);
         }
     };
 };
-const displayedLines: line[] = [];
-const redoStack: line[] = [];
+
+type sticker = {
+    x: number,
+    y: number,
+    type: string,
+    draw: (ctx: CanvasRenderingContext2D) => void,
+    drag: (x: number, y: number) => void
+};
+function createSticker(x: number, y: number, type: string): sticker{
+    return {
+        x: x,
+        y: y,
+        type: type,
+        draw(ctx: CanvasRenderingContext2D){
+            ctx.font = "48px serif";
+            switch (this.type){
+                case "pumpkin":
+                    ctx.fillText("🎃", this.x, this.y);
+                    break;
+                case "skull":
+                    ctx.fillText("💀", this.x, this.y);
+                    break;
+                case "broom":
+                    ctx.fillText("🧹", this.x, this.y);
+                    break;
+            }
+        },
+        drag(x: number, y: number){
+            this.x = x;
+            this.y = y;
+        }
+    };
+};
+const displayedLines: Array<line | sticker> = [];
+const redoStack: Array<line | sticker> = [];
 
 let previewType: string = "pen";
 type preview = {
@@ -81,6 +110,9 @@ function errorMessage(){
 
 if (pen){
     let drawing: boolean = false;
+    // If mouse is down AND the previewType is pen, then start drawing a line, 
+    // otherwise if clicking a sticker, start dragging it, 
+    // otherwise place a sticker
     stickerCanvas.addEventListener("mousedown", (lineStart) => {
         if (previewType !== "pen"){
             stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: lineStart.offsetX, y: lineStart.offsetY}}));
@@ -90,23 +122,33 @@ if (pen){
         }
     });
 
+    // If mouse is down and drawing, continue drawing the line, 
+    // otherwise if dragging a sticker, continue dragging it,
+    // otherwise display the preview
     stickerCanvas.addEventListener("mousemove", (nextPoint) => {
         if (drawing) {
-            displayedLines[displayedLines.length - 1].xCoords.push(nextPoint.offsetX);
-            displayedLines[displayedLines.length - 1].yCoords.push(nextPoint.offsetY);           
+            displayedLines[displayedLines.length - 1].drag(nextPoint.offsetX, nextPoint.offsetY);         
             stickerCanvas.dispatchEvent(new Event("drawing-changed"));
         } else {
             stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: nextPoint.offsetX, y: nextPoint.offsetY}}));
         }
     });
 
-    stickerCanvas.addEventListener("mouseup", () => {
-        drawing = false;
+    // If mouse is up and drawing, stop drawing the line,
+    // otherwise if dragging a sticker, stop dragging it
+    // otherwise HOW DID YOU GET HERE?
+    stickerCanvas.addEventListener("mouseup", (stickerPoint) => {
+        if (drawing) {
+            drawing = false;
+        } else {
+            displayedLines[displayedLines.length - 1].draw(pen);
+            stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: stickerPoint.offsetX, y: stickerPoint.offsetY}}));
+        }
     });
     
     stickerCanvas.addEventListener("drawing-changed", () => {
         pen.clearRect(0, 0, stickerCanvas.width, stickerCanvas.height);
-        displayedLines.forEach(line => line.display(pen));
+        displayedLines.forEach(line => line.draw(pen));
     });
 
     stickerCanvas.addEventListener("tool-moved", (cursorEvent) => {
