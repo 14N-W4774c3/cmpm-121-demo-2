@@ -21,40 +21,52 @@ type line = {
     xCoords: number[], 
     yCoords: number[], 
     lineWidth: number,
+    type: string,
     display: (ctx: CanvasRenderingContext2D) => void
 };
-function createLine(xCoord: number, yCoord: number, width: number = 3): line{
+function createLine(xCoord: number, yCoord: number, width: number = 3, type: string = "pen"): line{
     return {
         xCoords: [xCoord],
         yCoords: [yCoord],
         lineWidth: width,
+        type: type,
         display(ctx: CanvasRenderingContext2D){
-            ctx.beginPath();
-            ctx.moveTo(this.xCoords[0], this.yCoords[0]);
-            for (let i = 1; i < this.xCoords.length; i++) {
-                ctx.lineTo(this.xCoords[i], this.yCoords[i]);
+            if (this.type === "pen"){
+                ctx.beginPath();
+                ctx.moveTo(this.xCoords[0], this.yCoords[0]);
+                for (let i = 1; i < this.xCoords.length; i++) {
+                    ctx.lineTo(this.xCoords[i], this.yCoords[i]);
+                }
+                if (this.lineWidth){
+                    ctx.lineWidth = this.lineWidth;
+                }
+                ctx.stroke();
+            } else {
+                ctx.font = "40px serif";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.type, this.xCoords[0], this.yCoords[0]);
             }
-            if (this.lineWidth){
-                ctx.lineWidth = this.lineWidth;
-            }
-            ctx.stroke();
+            
         }
     };
 };
 const displayedLines: line[] = [];
 const redoStack: line[] = [];
 
+let previewType: string = "pen";
 type preview = {
     x: number,
     y: number,
     width: number,
+    type: string,
     draw: (ctx: CanvasRenderingContext2D) => void
 };
-function createPreview(x: number, y: number, width: number): preview{
+function createPreview(x: number, y: number, width: number, type: string): preview{
     return {
         x: x,
         y: y,
         width: width,
+        type: type,
         draw(ctx: CanvasRenderingContext2D){
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.width, 0, 2 * Math.PI);
@@ -70,8 +82,12 @@ function errorMessage(){
 if (pen){
     let drawing: boolean = false;
     stickerCanvas.addEventListener("mousedown", (lineStart) => {
-        drawing = true;
-        displayedLines.push(createLine(lineStart.offsetX, lineStart.offsetY, lineWidth));
+        if (previewType !== "pen"){
+            stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: lineStart.offsetX, y: lineStart.offsetY}}));
+        } else {
+            drawing = true;
+            displayedLines.push(createLine(lineStart.offsetX, lineStart.offsetY, lineWidth));
+        }
     });
 
     stickerCanvas.addEventListener("mousemove", (nextPoint) => {
@@ -95,7 +111,7 @@ if (pen){
 
     stickerCanvas.addEventListener("tool-moved", (cursorEvent) => {
         const cursor = cursorEvent as CustomEvent<{x: number, y: number}>;
-        createPreview(cursor.detail.x, cursor.detail.y, lineWidth).draw(pen)
+        createPreview(cursor.detail.x, cursor.detail.y, lineWidth, previewType).draw(pen)
     });
 }
 else {errorMessage();}
@@ -132,12 +148,43 @@ redoButton.addEventListener("click", () => {
     else {errorMessage();}
 });
 
+
 const thinPenButton = document.createElement("button");
 thinPenButton.textContent = "Thin Pen";
 document.body.appendChild(thinPenButton);
-thinPenButton.addEventListener("click", () => {lineWidth = 3;});
+thinPenButton.addEventListener("click", () => {
+    lineWidth = 3;
+    previewType = "pen";
+});
 
 const thickPenButton = document.createElement("button");
 thickPenButton.textContent = "Thick Pen";
 document.body.appendChild(thickPenButton);
-thickPenButton.addEventListener("click", () => {lineWidth = 6;});
+thickPenButton.addEventListener("click", () => {
+    lineWidth = 6;
+    previewType = "pen";
+});
+
+const pumpkinButton = document.createElement("button");
+pumpkinButton.textContent = "🎃";
+document.body.appendChild(pumpkinButton);
+pumpkinButton.addEventListener("click", () => {
+    previewType = "pumpkin";
+    stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: 128, y: 128}}));
+});
+
+const skullButton = document.createElement("button");
+skullButton.textContent = "💀";
+document.body.appendChild(skullButton);
+skullButton.addEventListener("click", () => {
+    previewType = "skull";
+    stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: 128, y: 128}}));
+});
+
+const broomButton = document.createElement("button");
+broomButton.textContent = "🧹";
+document.body.appendChild(broomButton);
+broomButton.addEventListener("click", () => {
+    previewType = "broom";
+    stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: 128, y: 128}}));
+});
