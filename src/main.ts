@@ -21,6 +21,7 @@ type line = {
     xCoords: number[], 
     yCoords: number[], 
     lineWidth: number,
+    type: string,
     draw: (ctx: CanvasRenderingContext2D) => void,
     drag: (x: number, y: number) => void
 };
@@ -29,6 +30,7 @@ function createLine(xCoord: number, yCoord: number, width: number = 3): line{
         xCoords: [xCoord],
         yCoords: [yCoord],
         lineWidth: width,
+        type: "pen",
         draw(ctx: CanvasRenderingContext2D){
             ctx.beginPath();
             ctx.moveTo(this.xCoords[0], this.yCoords[0]);
@@ -106,6 +108,18 @@ function createPreview(x: number, y: number, width: number, type: string): previ
 
 function errorMessage(){
     console.error("Could not get 2D context from canvas");
+};
+
+function checkStickers(displayArray: Array<line | sticker>, coordX: number, coordY: number): sticker | null{
+    for (let i = displayArray.length - 1; i >= 0; i--){
+        if (displayArray[i].type !== "pen"){
+            const sticker = displayArray[i] as sticker;
+            if (coordX >= sticker.x - 24 && coordX <= sticker.x + 24 && coordY >= sticker.y - 24 && coordY <= sticker.y + 24){
+                return sticker;
+            }
+        }
+    }
+    return null;
 }
 
 if (pen){
@@ -115,6 +129,14 @@ if (pen){
     // otherwise place a sticker
     stickerCanvas.addEventListener("mousedown", (lineStart) => {
         if (previewType !== "pen"){
+            if (displayedLines.length > 0){
+                const lastLine = checkStickers(displayedLines, lineStart.offsetX, lineStart.offsetY);
+                if (lastLine){
+                    displayedLines.splice(displayedLines.indexOf(lastLine), 1);
+                    displayedLines.push(createSticker(lineStart.offsetX, lineStart.offsetY, previewType));
+                    stickerCanvas.dispatchEvent(new Event("drawing-changed"));
+                }
+            }
             stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: lineStart.offsetX, y: lineStart.offsetY}}));
         } else {
             drawing = true;
@@ -141,6 +163,8 @@ if (pen){
         if (drawing) {
             drawing = false;
         } else {
+            const placedSticker = createSticker(stickerPoint.offsetX, stickerPoint.offsetY, previewType);
+            displayedLines.push(placedSticker);
             displayedLines[displayedLines.length - 1].draw(pen);
             stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: stickerPoint.offsetX, y: stickerPoint.offsetY}}));
         }
