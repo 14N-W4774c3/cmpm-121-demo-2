@@ -16,7 +16,67 @@ document.body.appendChild(stickerCanvas);
 
 const pen = stickerCanvas.getContext("2d");
 let lineWidth = 3;
+interface drawable {
+    xCoords: number[],
+    yCoords: number[],
+    lineWidth: number,
+    type: string,
+    isDisplayed: boolean,
+    draw: (ctx: CanvasRenderingContext2D) => void,
+    drag: (x: number, y: number) => void
+};
 
+function createDrawable(xCoord: number, yCoord: number, width: number = 3, type: string = "pen", display: boolean = true): drawable{
+    return {
+        xCoords: [xCoord],
+        yCoords: [yCoord],
+        lineWidth: width,
+        type: type,
+        isDisplayed: display,
+        draw(ctx: CanvasRenderingContext2D){
+            if (this.isDisplayed){
+                if (type === "pen"){
+                    ctx.beginPath();
+                    ctx.moveTo(this.xCoords[0], this.yCoords[0]);
+                    for (let i = 1; i < this.xCoords.length; i++) {
+                        ctx.lineTo(this.xCoords[i], this.yCoords[i]);
+                    }
+                    if (this.lineWidth){
+                        ctx.lineWidth = this.lineWidth;
+                    }
+                    ctx.stroke();
+                }
+                else {
+                    ctx.font = "48px serif";
+                    switch (this.type){
+                        case "pumpkin":
+                            ctx.fillText("🎃", this.xCoords[0], this.yCoords[0]);
+                            break;
+                        case "skull":
+                            ctx.fillText("💀", this.xCoords[0], this.yCoords[0]);
+                            break;
+                        case "broom":
+                            ctx.fillText("🧹", this.xCoords[0], this.yCoords[0]);
+                            break;
+                    }
+                }
+            }
+        },
+        drag(x: number, y: number){
+            if (this.isDisplayed){
+                if (type === "pen"){
+                    this.xCoords.push(x);
+                    this.yCoords.push(y);
+                }
+                else {
+                    this.xCoords[0] = x;
+                    this.yCoords[0] = y;
+                }
+            }
+        }
+    };
+} 
+/*
 type line = {
     xCoords: number[], 
     yCoords: number[], 
@@ -81,8 +141,12 @@ function createSticker(x: number, y: number, type: string): sticker{
         }
     };
 };
+
 const displayedLines: Array<line | sticker> = [];
 const redoStack: Array<line | sticker> = [];
+*/
+const displayedLines: Array<drawable> = [];
+const redoStack: Array<drawable> = [];
 
 let previewType: string = "pen";
 type preview = {
@@ -110,12 +174,11 @@ function errorMessage(){
     console.error("Could not get 2D context from canvas");
 };
 
-function checkStickers(displayArray: Array<line | sticker>, coordX: number, coordY: number): sticker | null{
+function checkStickers(displayArray: Array<drawable>, coordX: number, coordY: number): drawable | null{
     for (let i = displayArray.length - 1; i >= 0; i--){
         if (displayArray[i].type !== "pen"){
-            const sticker = displayArray[i] as sticker;
-            if (coordX >= sticker.x - 24 && coordX <= sticker.x + 24 && coordY >= sticker.y - 24 && coordY <= sticker.y + 24){
-                return sticker;
+            if (coordX >= displayArray[i].xCoords[0] - 24 && coordX <= displayArray[i].xCoords[0] + 24 && coordY >= displayArray[i].yCoords[0] - 24 && coordY <= displayArray[i].yCoords[0] + 24){
+                return displayArray[i];
             }
         }
     }
@@ -133,14 +196,14 @@ if (pen){
                 const lastLine = checkStickers(displayedLines, lineStart.offsetX, lineStart.offsetY);
                 if (lastLine){
                     displayedLines.splice(displayedLines.indexOf(lastLine), 1);
-                    displayedLines.push(createSticker(lineStart.offsetX, lineStart.offsetY, previewType));
+                    displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType));
                     stickerCanvas.dispatchEvent(new Event("drawing-changed"));
                 }
             }
             stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: lineStart.offsetX, y: lineStart.offsetY}}));
         } else {
             drawing = true;
-            displayedLines.push(createLine(lineStart.offsetX, lineStart.offsetY, lineWidth));
+            displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth));
         }
     });
 
@@ -163,7 +226,7 @@ if (pen){
         if (drawing) {
             drawing = false;
         } else {
-            const placedSticker = createSticker(stickerPoint.offsetX, stickerPoint.offsetY, previewType);
+            const placedSticker = createDrawable(stickerPoint.offsetX, stickerPoint.offsetY, lineWidth, previewType);
             displayedLines.push(placedSticker);
             displayedLines[displayedLines.length - 1].draw(pen);
             stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: stickerPoint.offsetX, y: stickerPoint.offsetY}}));
