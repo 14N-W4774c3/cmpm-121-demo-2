@@ -192,10 +192,12 @@ if (pen){
     // otherwise place a sticker
     stickerCanvas.addEventListener("mousedown", (lineStart) => {
         if (previewType !== "pen"){
-            if (displayedLines.length > 0){
+            if (displayedLines.length === 0){
+                displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType));
+            } else {
                 const lastLine = checkStickers(displayedLines, lineStart.offsetX, lineStart.offsetY);
                 if (lastLine){
-                    displayedLines.splice(displayedLines.indexOf(lastLine), 1);
+                    lastLine.isDisplayed = false;
                     displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType));
                     stickerCanvas.dispatchEvent(new Event("drawing-changed"));
                 }
