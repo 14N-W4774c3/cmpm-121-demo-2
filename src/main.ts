@@ -187,6 +187,7 @@ function checkStickers(displayArray: Array<drawable>, coordX: number, coordY: nu
 
 if (pen){
     let drawing: boolean = false;
+    let dragging: boolean = false;
     // If mouse is down AND the previewType is pen, then start drawing a line, 
     // otherwise if clicking a sticker, start dragging it, 
     // otherwise place a sticker
@@ -198,11 +199,13 @@ if (pen){
                 const lastLine = checkStickers(displayedLines, lineStart.offsetX, lineStart.offsetY);
                 if (lastLine){
                     lastLine.isDisplayed = false;
-                    displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType, false));
+                    displayedLines.push(lastLine);
+                    dragging = true;
+                    stickerCanvas.dispatchEvent(new Event("drawing-changed"));
+                } else {
+                    displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType));
                     stickerCanvas.dispatchEvent(new Event("drawing-changed"));
                 }
-                displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType));
-                stickerCanvas.dispatchEvent(new Event("drawing-changed"));
             }
         } else {
             drawing = true;
@@ -228,12 +231,13 @@ if (pen){
     stickerCanvas.addEventListener("mouseup", (stickerPoint) => {
         if (drawing) {
             drawing = false;
-        } else {
+        } else if (dragging) {
             const placedSticker = createDrawable(stickerPoint.offsetX, stickerPoint.offsetY, lineWidth, previewType);
             displayedLines.push(placedSticker);
             displayedLines[displayedLines.length - 1].draw(pen);
             stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: stickerPoint.offsetX, y: stickerPoint.offsetY}}));
         }
+        else {console.error("How did you get here?");}
     });
     
     stickerCanvas.addEventListener("drawing-changed", () => {
