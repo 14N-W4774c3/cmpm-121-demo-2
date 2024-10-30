@@ -76,75 +76,7 @@ function createDrawable(xCoord: number, yCoord: number, width: number = 3, type:
         }
     };
 } 
-/*
-type line = {
-    xCoords: number[], 
-    yCoords: number[], 
-    lineWidth: number,
-    type: string,
-    draw: (ctx: CanvasRenderingContext2D) => void,
-    drag: (x: number, y: number) => void
-};
-function createLine(xCoord: number, yCoord: number, width: number = 3): line{
-    return {
-        xCoords: [xCoord],
-        yCoords: [yCoord],
-        lineWidth: width,
-        type: "pen",
-        draw(ctx: CanvasRenderingContext2D){
-            ctx.beginPath();
-            ctx.moveTo(this.xCoords[0], this.yCoords[0]);
-            for (let i = 1; i < this.xCoords.length; i++) {
-                ctx.lineTo(this.xCoords[i], this.yCoords[i]);
-            }
-            if (this.lineWidth){
-                ctx.lineWidth = this.lineWidth;
-            }
-            ctx.stroke();
-        },
-        drag(x: number, y: number){
-            this.xCoords.push(x);
-            this.yCoords.push(y);
-        }
-    };
-};
 
-type sticker = {
-    x: number,
-    y: number,
-    type: string,
-    draw: (ctx: CanvasRenderingContext2D) => void,
-    drag: (x: number, y: number) => void
-};
-function createSticker(x: number, y: number, type: string): sticker{
-    return {
-        x: x,
-        y: y,
-        type: type,
-        draw(ctx: CanvasRenderingContext2D){
-            ctx.font = "48px serif";
-            switch (this.type){
-                case "pumpkin":
-                    ctx.fillText("🎃", this.x, this.y);
-                    break;
-                case "skull":
-                    ctx.fillText("💀", this.x, this.y);
-                    break;
-                case "broom":
-                    ctx.fillText("🧹", this.x, this.y);
-                    break;
-            }
-        },
-        drag(x: number, y: number){
-            this.x = x;
-            this.y = y;
-        }
-    };
-};
-
-const displayedLines: Array<line | sticker> = [];
-const redoStack: Array<line | sticker> = [];
-*/
 const displayedLines: Array<drawable> = [];
 const redoStack: Array<drawable> = [];
 
@@ -188,9 +120,6 @@ function checkStickers(displayArray: Array<drawable>, coordX: number, coordY: nu
 if (pen){
     let drawing: boolean = false;
     let dragging: boolean = false;
-    // If mouse is down AND the previewType is pen, then start drawing a line, 
-    // otherwise if clicking a sticker, start dragging it, 
-    // otherwise place a sticker
     stickerCanvas.addEventListener("mousedown", (lineStart) => {
         if (previewType !== "pen"){
             if (displayedLines.length === 0){
@@ -213,9 +142,6 @@ if (pen){
         }
     });
 
-    // If mouse is down and drawing, continue drawing the line, 
-    // otherwise if dragging a sticker, continue dragging it,
-    // otherwise display the preview
     stickerCanvas.addEventListener("mousemove", (nextPoint) => {
         if (drawing) {
             displayedLines[displayedLines.length - 1].drag(nextPoint.offsetX, nextPoint.offsetY);         
@@ -225,9 +151,6 @@ if (pen){
         }
     });
 
-    // If mouse is up and drawing, stop drawing the line,
-    // otherwise if dragging a sticker, stop dragging it
-    // otherwise HOW DID YOU GET HERE?
     stickerCanvas.addEventListener("mouseup", (stickerPoint) => {
         if (drawing) {
             drawing = false;
@@ -287,7 +210,6 @@ redoButton.textContent = "Redo";
 document.body.appendChild(redoButton);
 redoButton.addEventListener("click", () => {
     if (pen && redoStack.length > 0) {
-        //displayedLines.push(redoStack.pop()!);
         const redoLine = redoStack.pop()!;
         if (!redoLine.isDisplayed){
             const oldSticker = checkStickers(displayedLines, redoLine.xCoords[0], redoLine.yCoords[0]);
