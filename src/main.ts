@@ -198,11 +198,12 @@ if (pen){
                 const lastLine = checkStickers(displayedLines, lineStart.offsetX, lineStart.offsetY);
                 if (lastLine){
                     lastLine.isDisplayed = false;
-                    displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType));
+                    displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType, false));
                     stickerCanvas.dispatchEvent(new Event("drawing-changed"));
                 }
+                displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth, previewType));
+                stickerCanvas.dispatchEvent(new Event("drawing-changed"));
             }
-            stickerCanvas.dispatchEvent(new CustomEvent("tool-moved", {detail: {x: lineStart.offsetX, y: lineStart.offsetY}}));
         } else {
             drawing = true;
             displayedLines.push(createDrawable(lineStart.offsetX, lineStart.offsetY, lineWidth));
@@ -263,6 +264,15 @@ document.body.appendChild(undoButton);
 undoButton.addEventListener("click", () => {
     if (pen && displayedLines.length > 0) {
         redoStack.push(displayedLines.pop()!);
+        if (redoStack[redoStack.length - 1].type !== "pen"){
+            if (displayedLines.length > 0 && displayedLines[displayedLines.length - 1].isDisplayed === false){
+                redoStack.push(displayedLines.pop()!);
+                const oldSticker = checkStickers(displayedLines, redoStack[redoStack.length - 1].xCoords[0], redoStack[redoStack.length - 1].yCoords[0]);
+                if (oldSticker){
+                    oldSticker.isDisplayed = true;
+                }
+            }
+        }
         stickerCanvas.dispatchEvent(new Event("drawing-changed"));
     }
     else {errorMessage();}
@@ -273,7 +283,18 @@ redoButton.textContent = "Redo";
 document.body.appendChild(redoButton);
 redoButton.addEventListener("click", () => {
     if (pen && redoStack.length > 0) {
-        displayedLines.push(redoStack.pop()!);
+        //displayedLines.push(redoStack.pop()!);
+        const redoLine = redoStack.pop()!;
+        if (!redoLine.isDisplayed){
+            const oldSticker = checkStickers(displayedLines, redoLine.xCoords[0], redoLine.yCoords[0]);
+            if (oldSticker){
+                oldSticker.isDisplayed = false;
+            }
+            displayedLines.push(redoLine);
+            displayedLines.push(redoStack.pop()!);
+        } else {
+            displayedLines.push(redoLine);
+        }
         stickerCanvas.dispatchEvent(new Event("drawing-changed"));
     }
     else {errorMessage();}
